@@ -2,7 +2,11 @@ package webserver;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,10 +29,39 @@ public class RequestHandler extends Thread {
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
 
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
-            System.out.println(br.readLine());
+            String filePath = "";
+            String str = "";
+            while((str = br.readLine()) != null) {
+                System.out.println(str);
+                String[] tokens = str.split(" ");
+                if(tokens[0].equals("GET")) {
+                    filePath = tokens[1];
+                    if(filePath.contains("?")) {
+                        String[] queryStringList = filePath.substring(filePath.indexOf('?')+1).split("&");
+                        User user = new User();
+                        for(String queryString : queryStringList) {
+                            String[] queryStr = queryString.split("=");
+                            String key = queryStr[0];
+                            String value = queryStr[1];
+                            if(key.equals("userId"))
+                                user.setUserId(value);
+                            else if(key.equals("password"))
+                                user.setPassword(value);
+                            else if(key.equals("name"))
+                                user.setName(value);
+                            if(key.equals("email"))
+                                user.setEmail(value);
+                        }
+                        System.out.println(user);
+                    }
+                    break;
+                }
+            }
 
             DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = "Hello World".getBytes();
+            String directoryPath = "./webapp" + filePath;
+            Path path = Paths.get(directoryPath);
+            byte[] body = Files.readAllBytes(path);
             response200Header(dos, body.length);
             responseBody(dos, body);
         } catch (IOException e) {
