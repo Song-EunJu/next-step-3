@@ -5,10 +5,12 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.HttpRequestUtils;
 
 // 사용자 요청/응답 처리를 담당하는 클래스
 public class RequestHandler extends Thread {
@@ -27,39 +29,24 @@ public class RequestHandler extends Thread {
         // InputStream : 클라이언트 (웹 브라우저) -> 서버로 요청 보낼 때 전달되는 데이터 담당 스트림
         // OutputStream : 서버 -> 클라이언트에 응답 보낼 때 전달되는 데이터 담당 스트림
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
-            String filePath = "";
-            String str = "";
-            while((str = br.readLine()) != null) {
-                System.out.println(str);
-                String[] tokens = str.split(" ");
-                if(tokens[0].equals("GET")) {
-                    filePath = tokens[1];
-                    if(filePath.contains("?")) {
-                        String[] queryStringList = filePath.substring(filePath.indexOf('?')+1).split("&");
-                        User user = new User();
-                        for(String queryString : queryStringList) {
-                            String[] queryStr = queryString.split("=");
-                            String key = queryStr[0];
-                            String value = queryStr[1];
-                            if(key.equals("userId"))
-                                user.setUserId(value);
-                            else if(key.equals("password"))
-                                user.setPassword(value);
-                            else if(key.equals("name"))
-                                user.setName(value);
-                            if(key.equals("email"))
-                                user.setEmail(value);
-                        }
-                        System.out.println(user);
-                    }
-                    break;
-                }
+            String httpRequest = br.readLine();
+
+            if (httpRequest == null)
+                return;
+
+            String[] httpRequestInfo = httpRequest.split(" ");
+            String method = httpRequestInfo[0];
+            String uri = httpRequestInfo[1];
+
+            // 요구사항 1 : 모든 HTTP 요청정보 출력
+            while (!httpRequest.isEmpty()) {
+                log.info(httpRequest);
+                httpRequest = br.readLine();
             }
 
             DataOutputStream dos = new DataOutputStream(out);
-            String directoryPath = "./webapp" + filePath;
+            String directoryPath = "./webapp" + uri;
             Path path = Paths.get(directoryPath);
             byte[] body = Files.readAllBytes(path);
             response200Header(dos, body.length);
