@@ -45,6 +45,19 @@ public class RequestHandler extends Thread {
                 httpRequest = br.readLine();
             }
 
+            if (method.equals("/user/form.html")) {
+                if (uri.contains("?")) {
+                    String params = uri.substring(uri.indexOf('?') + 1);
+                    Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
+                    User user = User.builder()
+                            .userId(paramMap.get("userId"))
+                            .password(paramMap.get("password"))
+                            .name(paramMap.get("name"))
+                            .email(paramMap.get("email"))
+                            .build();
+                }
+            }
+
             DataOutputStream dos = new DataOutputStream(out);
             String directoryPath = "./webapp" + uri;
             Path path = Paths.get(directoryPath);
