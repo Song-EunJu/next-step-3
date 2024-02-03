@@ -45,17 +45,33 @@ public class RequestHandler extends Thread {
                 httpRequest = br.readLine();
             }
 
+            log.info("--------------------");
+
+            // 2. GET 방식 회원가입
             if (method.equals("/user/form.html")) {
-                if (uri.contains("?")) {
-                    String params = uri.substring(uri.indexOf('?') + 1);
-                    Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
-                    User user = User.builder()
-                            .userId(paramMap.get("userId"))
-                            .password(paramMap.get("password"))
-                            .name(paramMap.get("name"))
-                            .email(paramMap.get("email"))
-                            .build();
-                }
+                String params = uri.substring(uri.indexOf('?') + 1);
+                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
+                User user = User.builder()
+                        .userId(paramMap.get("userId"))
+                        .password(paramMap.get("password"))
+                        .name(paramMap.get("name"))
+                        .email(paramMap.get("email"))
+                        .build();
+
+            }
+
+            // 3. POST 방식 회원가입
+            if (uri.contains("/user/create")) {
+                System.out.println(method + " " + uri);
+//                String params = uri.substring(uri.indexOf('?') + 1);
+//                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
+//                User user = User.builder()
+//                        .userId(paramMap.get("userId"))
+//                        .password(paramMap.get("password"))
+//                        .name(paramMap.get("name"))
+//                        .email(paramMap.get("email"))
+//                        .build();
+
             }
 
             DataOutputStream dos = new DataOutputStream(out);
