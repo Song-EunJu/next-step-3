@@ -14,6 +14,11 @@ public class HttpRequestUtils {
         return httpRequestInfo[1];
     }
 
+    public static String getMethod(String httpRequestFirstLine) {
+        String[] httpRequestInfo = httpRequestFirstLine.split(" ");
+        return httpRequestInfo[0];
+    }
+
 
     /**
      * @param queryString
@@ -43,7 +48,7 @@ public class HttpRequestUtils {
                 .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
     }
 
-    static Pair getKeyValue(String keyValue, String regex) {
+    public static Pair getKeyValue(String keyValue, String regex) {
         if (Strings.isNullOrEmpty(keyValue)) {
             return null;
         }
