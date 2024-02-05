@@ -11,6 +11,8 @@ import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
+import util.HttpRequestUtils.Pair;
+import util.IOUtils;
 
 // 사용자 요청/응답 처리를 담당하는 클래스
 public class RequestHandler extends Thread {
@@ -32,46 +34,53 @@ public class RequestHandler extends Thread {
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             String httpRequest = br.readLine();
 
+            // TODO : 아무 값도 없는 null 요청이 왜 오는지 확인
             if (httpRequest == null)
                 return;
 
-            String[] httpRequestInfo = httpRequest.split(" ");
-            String method = httpRequestInfo[0];
-            String uri = httpRequestInfo[1];
+            String uri = HttpRequestUtils.getUrl(httpRequest);
+            String method = HttpRequestUtils.getMethod(httpRequest);
+            int bodyLength = 0;
 
-            // 요구사항 1 : 모든 HTTP 요청정보 출력
-            while (!httpRequest.isEmpty()) {
+            // 모든 HTTP 요청정보 출력
+            while (!httpRequest.isBlank()) {
                 log.info(httpRequest);
+                Pair header = HttpRequestUtils.parseHeader(httpRequest);
+                if (header != null) {
+                    String key = header.getKey();
+                    if (key.equals("Content-Length")) {
+                        bodyLength = Integer.parseInt(header.getValue());
+                    }
+                }
                 httpRequest = br.readLine();
             }
 
-            log.info("--------------------");
+            String body = IOUtils.readData(br, bodyLength);
+            log.debug("Body : {}", body);
 
             // 2. GET 방식 회원가입
-            if (method.equals("/user/form.html")) {
-                String params = uri.substring(uri.indexOf('?') + 1);
-                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
+            if (uri.startsWith("/user/create")) {
+//                if(method.equals("GET")){
+//                    String params = uri.substring(uri.indexOf('?') + 1);
+//                    Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
+//                    User user = User.builder()
+//                            .userId(paramMap.get("userId"))
+//                            .password(paramMap.get("password"))
+//                            .name(paramMap.get("name"))
+//                            .email(paramMap.get("email"))
+//                            .build();
+//                    log.debug("User : {}", user);
+//                    uri = "/index.html";
+//                }
+                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(body);
                 User user = User.builder()
                         .userId(paramMap.get("userId"))
                         .password(paramMap.get("password"))
                         .name(paramMap.get("name"))
                         .email(paramMap.get("email"))
                         .build();
-
-            }
-
-            // 3. POST 방식 회원가입
-            if (uri.contains("/user/create")) {
-                System.out.println(method + " " + uri);
-//                String params = uri.substring(uri.indexOf('?') + 1);
-//                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
-//                User user = User.builder()
-//                        .userId(paramMap.get("userId"))
-//                        .password(paramMap.get("password"))
-//                        .name(paramMap.get("name"))
-//                        .email(paramMap.get("email"))
-//                        .build();
-
+                log.debug("User : {}", user);
+                uri = "/index.html";
             }
 
             DataOutputStream dos = new DataOutputStream(out);
@@ -80,7 +89,8 @@ public class RequestHandler extends Thread {
             byte[] body = Files.readAllBytes(path);
             response200Header(dos, body.length);
             responseBody(dos, body);
-        } catch (IOException e) {
+        } catch (
+                IOException e) {
             log.error(e.getMessage());
         }
     }
