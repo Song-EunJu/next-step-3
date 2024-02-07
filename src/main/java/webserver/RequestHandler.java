@@ -48,15 +48,15 @@ public class RequestHandler extends Thread {
                 Pair header = HttpRequestUtils.parseHeader(httpRequest);
                 if (header != null) {
                     String key = header.getKey();
+                    log.debug("Header Key : {}", key);
                     if (key.equals("Content-Length")) {
                         bodyLength = Integer.parseInt(header.getValue());
                     }
                 }
                 httpRequest = br.readLine();
             }
-
-            String body = IOUtils.readData(br, bodyLength);
-            log.debug("Body : {}", body);
+            log.debug("Body Length : {}", bodyLength);
+            String data = IOUtils.readData(br, bodyLength);
 
             // 2. GET 방식 회원가입
             if (uri.startsWith("/user/create")) {
@@ -72,7 +72,7 @@ public class RequestHandler extends Thread {
 //                    log.debug("User : {}", user);
 //                    uri = "/index.html";
 //                }
-                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(body);
+                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(data);
                 User user = User.builder()
                         .userId(paramMap.get("userId"))
                         .password(paramMap.get("password"))
