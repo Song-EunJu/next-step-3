@@ -49,7 +49,8 @@ public class RequestHandler extends Thread {
                 if (header != null) {
                     String key = header.getKey();
                     log.debug("Header Key : {}", key);
-                    if (key.equals("Content-Length")) {
+                    if (key.equals("Content-Length") && method.equals("POST") && bodyLength == 0) {
+                        log.debug("Header Value : {}", header.getValue());
                         bodyLength = Integer.parseInt(header.getValue());
                     }
                 }
@@ -83,14 +84,14 @@ public class RequestHandler extends Thread {
                 uri = "/index.html";
             }
 
+            // TODO : /user/create REDIRECT 해주는 부분 추가하면 0으로 초기화되는 문제 해결 가능
             DataOutputStream dos = new DataOutputStream(out);
             String directoryPath = "./webapp" + uri;
             Path path = Paths.get(directoryPath);
             byte[] body = Files.readAllBytes(path);
             response200Header(dos, body.length);
             responseBody(dos, body);
-        } catch (
-                IOException e) {
+        } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
@@ -105,6 +106,8 @@ public class RequestHandler extends Thread {
             log.error(e.getMessage());
         }
     }
+
+
 
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
