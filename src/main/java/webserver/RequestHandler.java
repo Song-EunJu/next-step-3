@@ -49,8 +49,9 @@ public class RequestHandler extends Thread {
                 if (header != null) {
                     String key = header.getKey();
                     log.debug("Header Key : {}", key);
-                    if (key.equals("Content-Length") && method.equals("POST")) {
+                    if (key.equals("Content-Length") && method.equals("POST") && bodyLength == 0) {
                         log.debug("Header Value : {}", header.getValue());
+                        User user = new User();
                         bodyLength = Integer.parseInt(header.getValue());
                     }
                 }
