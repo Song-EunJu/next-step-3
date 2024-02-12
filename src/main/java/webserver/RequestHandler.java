@@ -49,31 +49,19 @@ public class RequestHandler extends Thread {
                 if (header != null) {
                     String key = header.getKey();
                     log.debug("Header Key : {}", key);
-                    if (key.equals("Content-Length") && method.equals("POST") && bodyLength == 0) {
+                    if (key.equals("Content-Length") && method.equals("POST")) {
                         log.debug("Header Value : {}", header.getValue());
-                        User user = new User();
                         bodyLength = Integer.parseInt(header.getValue());
                     }
                 }
                 httpRequest = br.readLine();
             }
-            log.debug("Body Length : {}", bodyLength);
-            String data = IOUtils.readData(br, bodyLength);
 
-            // 2. GET 방식 회원가입
-            if (uri.startsWith("/user/create")) {
-//                if(method.equals("GET")){
-//                    String params = uri.substring(uri.indexOf('?') + 1);
-//                    Map<String, String> paramMap = HttpRequestUtils.parseQueryString(params);
-//                    User user = User.builder()
-//                            .userId(paramMap.get("userId"))
-//                            .password(paramMap.get("password"))
-//                            .name(paramMap.get("name"))
-//                            .email(paramMap.get("email"))
-//                            .build();
-//                    log.debug("User : {}", user);
-//                    uri = "/index.html";
-//                }
+            log.debug("Body Length : {}", bodyLength);
+            DataOutputStream dos = new DataOutputStream(out);
+
+            if(bodyLength != 0) {
+                String data = IOUtils.readData(br, bodyLength);
                 Map<String, String> paramMap = HttpRequestUtils.parseQueryString(data);
                 User user = User.builder()
                         .userId(paramMap.get("userId"))
@@ -82,16 +70,30 @@ public class RequestHandler extends Thread {
                         .email(paramMap.get("email"))
                         .build();
                 log.debug("User : {}", user);
-                uri = "/index.html";
+                String redirectUrl = "/index.html";
+                String directoryPath = "./webapp" + redirectUrl;
+                Path path = Paths.get(directoryPath);
+                byte[] body = Files.readAllBytes(path);
+                response302Header(dos, redirectUrl);
+                responseBody(dos, body);
             }
+            else {
+                String directoryPath = "./webapp" + uri;
+                Path path = Paths.get(directoryPath);
+                byte[] body = Files.readAllBytes(path);
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
 
-            // TODO : /user/create REDIRECT 해주는 부분 추가하면 0으로 초기화되는 문제 해결 가능
-            DataOutputStream dos = new DataOutputStream(out);
-            String directoryPath = "./webapp" + uri;
-            Path path = Paths.get(directoryPath);
-            byte[] body = Files.readAllBytes(path);
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+    private void response302Header(DataOutputStream dos, String redirectUrl) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " + redirectUrl + "\r\n");
+            dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
         }
