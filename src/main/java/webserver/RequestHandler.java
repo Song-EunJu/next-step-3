@@ -57,6 +57,10 @@ public class RequestHandler extends Thread {
                 httpRequest = br.readLine();
             }
 
+            if(uri.startsWith("/user/login.html")){
+
+            }
+
             log.debug("Body Length : {}", bodyLength);
             DataOutputStream dos = new DataOutputStream(out);
 
