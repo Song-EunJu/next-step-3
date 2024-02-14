@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 
+import db.DataBase;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,14 +58,10 @@ public class RequestHandler extends Thread {
                 httpRequest = br.readLine();
             }
 
-            if(uri.startsWith("/user/login.html")){
-
-            }
-
             log.debug("Body Length : {}", bodyLength);
             DataOutputStream dos = new DataOutputStream(out);
 
-            if(bodyLength != 0) {
+            if(uri.startsWith("/user/create")){
                 String data = IOUtils.readData(br, bodyLength);
                 Map<String, String> paramMap = HttpRequestUtils.parseQueryString(data);
                 User user = User.builder()
@@ -74,6 +71,7 @@ public class RequestHandler extends Thread {
                         .email(paramMap.get("email"))
                         .build();
                 log.debug("User : {}", user);
+                DataBase.addUser(user);
                 String redirectUrl = "/index.html";
                 String directoryPath = "./webapp" + redirectUrl;
                 Path path = Paths.get(directoryPath);
@@ -81,8 +79,17 @@ public class RequestHandler extends Thread {
                 response302Header(dos, redirectUrl);
                 responseBody(dos, body);
             }
+            else if(uri.startsWith("/user/login")) {
+                String data = IOUtils.readData(br, bodyLength);
+                Map<String, String> paramMap = HttpRequestUtils.parseQueryString(data);
+                String userId = paramMap.get("userId");
+                String password = paramMap.get("password");
+                log.debug("Login User : {}", userId, password);
+            }
             else {
+                // TODO : /user/login.html 접속 시 페이지 작동 X 오류 발생 해결 필요
                 String directoryPath = "./webapp" + uri;
+                log.debug("Uri : {}", directoryPath);
                 Path path = Paths.get(directoryPath);
                 byte[] body = Files.readAllBytes(path);
                 response200Header(dos, body.length);
